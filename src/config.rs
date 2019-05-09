@@ -1,3 +1,4 @@
+use std::prelude::v1::*;
 use super::internal::{Bounded, Infinite, SizeLimit};
 use byteorder::{BigEndian, ByteOrder, LittleEndian, NativeEndian};
 use de::read::BincodeRead;

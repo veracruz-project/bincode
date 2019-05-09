@@ -1,3 +1,4 @@
+use std::prelude::v1::*;
 use std::error::Error as StdError;
 use std::io;
 use std::str::Utf8Error;
@@ -39,6 +40,7 @@ pub enum ErrorKind {
     Custom(String),
 }
 
+#[allow(deprecated)]
 impl StdError for ErrorKind {
     fn description(&self) -> &str {
         match *self {
@@ -58,7 +60,7 @@ impl StdError for ErrorKind {
         }
     }
 
-    fn cause(&self) -> Option<&error::Error> {
+    fn cause(&self) -> Option<&dyn error::Error> {
         match *self {
             ErrorKind::Io(ref err) => Some(err),
             ErrorKind::InvalidUtf8Encoding(_) => None,
@@ -79,6 +81,7 @@ impl From<io::Error> for Error {
     }
 }
 
+#[allow(deprecated)]
 impl fmt::Display for ErrorKind {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {

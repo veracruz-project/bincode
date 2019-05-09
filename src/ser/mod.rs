@@ -88,15 +88,15 @@ impl<'a, W: Write, O: Options> serde::Serializer for &'a mut Serializer<W, O> {
         self.writer.write_i64::<O::Endian>(v).map_err(Into::into)
     }
 
-    serde_if_integer128! {
-        fn serialize_u128(self, v: u128) -> Result<()> {
-            self.writer.write_u128::<O::Endian>(v).map_err(Into::into)
-        }
-
-        fn serialize_i128(self, v: i128) -> Result<()> {
-            self.writer.write_i128::<O::Endian>(v).map_err(Into::into)
-        }
+    //serde_if_integer128! {
+    fn serialize_u128(self, v: u128) -> Result<()> {
+        self.writer.write_u128::<O::Endian>(v).map_err(Into::into)
     }
+
+    fn serialize_i128(self, v: i128) -> Result<()> {
+        self.writer.write_i128::<O::Endian>(v).map_err(Into::into)
+    }
+    //}
 
     fn serialize_f32(self, v: f32) -> Result<()> {
         self.writer.write_f32::<O::Endian>(v).map_err(Into::into)
@@ -107,7 +107,7 @@ impl<'a, W: Write, O: Options> serde::Serializer for &'a mut Serializer<W, O> {
     }
 
     fn serialize_str(self, v: &str) -> Result<()> {
-        try!(self.serialize_u64(v.len() as u64));
+        self.serialize_u64(v.len() as u64)?;
         self.writer.write_all(v.as_bytes()).map_err(Into::into)
     }
 
@@ -118,7 +118,7 @@ impl<'a, W: Write, O: Options> serde::Serializer for &'a mut Serializer<W, O> {
     }
 
     fn serialize_bytes(self, v: &[u8]) -> Result<()> {
-        try!(self.serialize_u64(v.len() as u64));
+        self.serialize_u64(v.len() as u64)?;
         self.writer.write_all(v).map_err(Into::into)
     }
 
@@ -130,13 +130,13 @@ impl<'a, W: Write, O: Options> serde::Serializer for &'a mut Serializer<W, O> {
     where
         T: serde::Serialize,
     {
-        try!(self.writer.write_u8(1));
+        self.writer.write_u8(1)?;
         v.serialize(self)
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq> {
-        let len = try!(len.ok_or(ErrorKind::SequenceMustHaveLength));
-        try!(self.serialize_u64(len as u64));
+        let len = len.ok_or(ErrorKind::SequenceMustHaveLength)?;
+        self.serialize_u64(len as u64)?;
         Ok(Compound { ser: self })
     }
 
@@ -159,13 +159,13 @@ impl<'a, W: Write, O: Options> serde::Serializer for &'a mut Serializer<W, O> {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleVariant> {
-        try!(self.serialize_u32(variant_index));
+        self.serialize_u32(variant_index)?;
         Ok(Compound { ser: self })
     }
 
     fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap> {
-        let len = try!(len.ok_or(ErrorKind::SequenceMustHaveLength));
-        try!(self.serialize_u64(len as u64));
+        let len = len.ok_or(ErrorKind::SequenceMustHaveLength)?;
+        self.serialize_u64(len as u64)?;
         Ok(Compound { ser: self })
     }
 
@@ -180,7 +180,7 @@ impl<'a, W: Write, O: Options> serde::Serializer for &'a mut Serializer<W, O> {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStructVariant> {
-        try!(self.serialize_u32(variant_index));
+        self.serialize_u32(variant_index)?;
         Ok(Compound { ser: self })
     }
 
@@ -201,7 +201,7 @@ impl<'a, W: Write, O: Options> serde::Serializer for &'a mut Serializer<W, O> {
     where
         T: serde::ser::Serialize,
     {
-        try!(self.serialize_u32(variant_index));
+        self.serialize_u32(variant_index)?;
         value.serialize(self)
     }
 
@@ -224,6 +224,7 @@ pub(crate) struct SizeChecker<O: Options> {
 }
 
 impl<O: Options> SizeChecker<O> {
+    #[allow(unused)]
     pub fn new(options: O) -> SizeChecker<O> {
         SizeChecker { options: options }
     }
@@ -312,7 +313,7 @@ impl<'a, O: Options> serde::Serializer for &'a mut SizeChecker<O> {
     }
 
     fn serialize_str(self, v: &str) -> Result<()> {
-        try!(self.add_value(0 as u64));
+        self.add_value(0 as u64)?;
         self.add_raw(v.len() as u64)
     }
 
@@ -321,7 +322,7 @@ impl<'a, O: Options> serde::Serializer for &'a mut SizeChecker<O> {
     }
 
     fn serialize_bytes(self, v: &[u8]) -> Result<()> {
-        try!(self.add_value(0 as u64));
+        self.add_value(0 as u64)?;
         self.add_raw(v.len() as u64)
     }
 
@@ -333,14 +334,14 @@ impl<'a, O: Options> serde::Serializer for &'a mut SizeChecker<O> {
     where
         T: serde::Serialize,
     {
-        try!(self.add_value(1 as u8));
+        self.add_value(1 as u8)?;
         v.serialize(self)
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq> {
-        let len = try!(len.ok_or(ErrorKind::SequenceMustHaveLength));
+        let len = len.ok_or(ErrorKind::SequenceMustHaveLength)?;
 
-        try!(self.serialize_u64(len as u64));
+        self.serialize_u64(len as u64)?;
         Ok(SizeCompound { ser: self })
     }
 
@@ -363,14 +364,14 @@ impl<'a, O: Options> serde::Serializer for &'a mut SizeChecker<O> {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleVariant> {
-        try!(self.add_value(variant_index));
+        self.add_value(variant_index)?;
         Ok(SizeCompound { ser: self })
     }
 
     fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap> {
-        let len = try!(len.ok_or(ErrorKind::SequenceMustHaveLength));
+        let len = len.ok_or(ErrorKind::SequenceMustHaveLength)?;
 
-        try!(self.serialize_u64(len as u64));
+        self.serialize_u64(len as u64)?;
         Ok(SizeCompound { ser: self })
     }
 
@@ -385,7 +386,7 @@ impl<'a, O: Options> serde::Serializer for &'a mut SizeChecker<O> {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStructVariant> {
-        try!(self.add_value(variant_index));
+        self.add_value(variant_index)?;
         Ok(SizeCompound { ser: self })
     }
 
@@ -413,7 +414,7 @@ impl<'a, O: Options> serde::Serializer for &'a mut SizeChecker<O> {
         _variant: &'static str,
         value: &V,
     ) -> Result<()> {
-        try!(self.add_value(variant_index));
+        self.add_value(variant_index)?;
         value.serialize(self)
     }
 

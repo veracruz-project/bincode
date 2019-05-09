@@ -1,3 +1,4 @@
+use std::prelude::v1::*;
 use serde;
 use std::io::{Read, Write};
 use std::marker::PhantomData;

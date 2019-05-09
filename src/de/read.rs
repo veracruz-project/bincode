@@ -1,3 +1,4 @@
+use std::prelude::v1::*;
 use error::Result;
 use serde;
 use std::{io, slice};
